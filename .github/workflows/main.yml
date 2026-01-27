@@ -1,0 +1,53 @@
+name: Robust Autocommit Bot
+
+on:
+  schedule:
+    - cron: '11 9,13 * * *'
+  workflow_dispatch:
+    inputs:
+      forced_mode:
+        description: 'Temporary mode override'
+        required: false
+        default: 'none'
+        type: choice
+        options:
+          - none
+          - crunch
+          - vacation
+          - standard
+
+jobs:
+  commit_job:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTO_COMMIT_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Timezone Dependencies
+        run: pip install pytz
+
+      - name: Run Autocommit Logic
+        env:
+          FORCED_MODE: ${{ github.event.inputs.forced_mode }}
+        run: python date_time.py
+
+      - name: Push Changes
+        run: |
+          git config --global user.name "sgmad"
+          git config --global user.email "scmad@proton.me"
+          
+          if [ -n "$(git cherry -v)" ]; then
+            # Logic: Pushes the HEAD to main using the skip option to prevent recursion
+            git push origin HEAD:main -o ci.skip
+          else
+            echo "No activity recorded."
+          fi
