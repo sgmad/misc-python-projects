@@ -2,7 +2,7 @@ name: Robust Autocommit Bot
 
 on:
   schedule:
-    - cron: '11 9,13 * * *'
+    - cron: '11 13 * * *'
   workflow_dispatch:
     inputs:
       forced_mode:
